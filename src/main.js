@@ -2,9 +2,9 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import './plugins/vuetify'
 import App from './App.vue'
-import router from './router'
+import router from './router.js'
 import HighchartsVue from 'highcharts-vue'
-import store from './store/store.js'
+import store from './store.js'
 import Axios from 'axios'
 
 Vue.config.productionTip = false
