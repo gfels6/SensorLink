@@ -1,10 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
-import { format } from 'url';
 
 const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
-const MOMO_BASE_URL = 'http://momo.bfh.ch:5000/api/';
 
 Vue.use(Vuex)
 
@@ -79,25 +77,6 @@ export default new Vuex.Store({
           
       })
     },
-
-    getMoMoToken(context){
-      let formData = new FormData();
-
-      formData.append('grant_type', 'password');
-      formData.append('username', 'Administrator');
-      formData.append('password', 'admin');
-      formData.append('scope', 'superuser');
-
-      axios({url: MOMO_BASE_URL + 'token/',
-      data: formData,
-      method: 'POST',
-      headers: { "Content-Type": "multipart/form-data"},
-      })
-      .then((response) => {
-        console.log(response);
-      })
-    }
-
 
   },
   getters : {
