@@ -12,6 +12,7 @@ export default new Vuex.Store({
     token: localStorage.getItem('token') || '',
     user : {},
     patientList: [],
+    sensorList: [],
     selectedPatient: '',
 
   },
@@ -40,6 +41,10 @@ export default new Vuex.Store({
     },
     set_patient(state, pat) {
       state.selectedPatient = pat;
+    },
+    set_sensorList(state, response){
+      console.log("Setzen der Sensoren");
+      state.sensorList = response.data;
     }
   },
   actions: {
@@ -72,6 +77,19 @@ export default new Vuex.Store({
       })
       .then((response) => {
         context.commit('set_patientList', response)
+      })
+      .catch(err => {
+          
+      })
+    },
+
+    getAllSensors(context){
+      axios({url: SL_BASE_URL + 'sensors', 
+      method: 'GET',
+      headers: { "Content-Type": "application/json", "Authorization": this.state.token},
+      })
+      .then((response) => {
+        context.commit('set_sensorList', response)
       })
       .catch(err => {
           
