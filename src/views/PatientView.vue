@@ -353,7 +353,7 @@ export default {
    box-shadow: none;
 }
 .padd {
-  padding: 16px 0px 16px 0px;
+  padding: 4px 0px 4px 0px;
 }
 .max {
   max-height: 30vh;
