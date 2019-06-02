@@ -10,7 +10,7 @@
       <NavigationList></NavigationList>
     </v-navigation-drawer>
 
-    <v-toolbar fixed app clipped-left>
+    <v-toolbar color="light-blue lighten-2" fixed app clipped-left>
       <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="isLoggedIn"></v-toolbar-side-icon>
       <v-toolbar-title class="headline">
         <span>SensorLink</span>
@@ -29,7 +29,7 @@ export default {
   name: 'App',
   data(){
     return {
-      drawer : true,
+      drawer : false,
       clipped: false,
     }
   },
