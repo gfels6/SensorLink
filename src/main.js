@@ -9,8 +9,6 @@ import Axios from 'axios'
 
 Vue.config.productionTip = false
 
-
-
 new Vue({
   router,
   store,

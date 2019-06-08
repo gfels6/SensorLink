@@ -5,7 +5,7 @@ import AddPatient from './views/AddPatient.vue'
 import AddSensor from './views/AddSensor.vue'
 import ImportCSV from './views/ImportCSV.vue'
 import Login from './views/Login.vue'
-import MeasuredData from './views/MeasuredData.vue'
+import PatientStatistics from './views/PatientStatistics.vue'
 import PatientOverview from './views/PatientOverview.vue'
 import PatientView from './views/PatientView.vue'
 import SensorOverview from './views/SensorOverview.vue'
@@ -45,9 +45,9 @@ let router = new VueRouter({
       component: Login
     },
     {
-      path: '/measuredData',
-      name: 'measureddata',
-      component: MeasuredData,
+      path: '/patientStatistics',
+      name: 'patientstatistics',
+      component: PatientStatistics,
       meta: { 
         requiresAuth: true
       }

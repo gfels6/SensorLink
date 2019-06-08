@@ -19,12 +19,12 @@
                 </template>
                 <v-card>
                   <v-card-text>
-                    <div>Sensor mit ID: {{ sensor.sensorType }} - {{ sensor.sensorId }}</div>
-                    <div>Hersteller: {{sensor.manufacturer}}</div>
-                    <div v-if="sensor.sensorType=='mobilitymonitor'">Mögliche Messwerte: Liegeverhalten, Aufstehverhalten, Bewegung</div>
-                    <div v-if="sensor.sensorType=='everion'">Mögliche Messwerte: Puls, Sauerstoffsättigung, Atemfrequenz, Herzvariabilität</div>
-                    <div v-if="sensor.linkedPatId!=null">Patient {{sensor.linkedPatId}} mit diesem Sensor verbunden</div>
-                    <div v-if="sensor.linkedPatId==null">Kein Patient mit diesem Sensor verbunden</div>
+                    <div><b>Sensor mit ID:</b> {{ sensor.sensorType }} - {{ sensor.sensorId }}</div>
+                    <div><b>Hersteller:</b> {{sensor.manufacturer}}</div>
+                    <div v-if="sensor.sensorType=='mobilitymonitor'"><b>Mögliche Messwerte:</b> Liegeverhalten, Aufstehverhalten, Bewegung</div>
+                    <div v-if="sensor.sensorType=='everion'"><b>Mögliche Messwerte: </b>Puls, Sauerstoffsättigung, Atemfrequenz, Herzvariabilität</div>
+                    <div v-if="sensor.linkedPatId!=null"><b>Verbindung: </b>Patient {{sensor.linkedPatId}} mit diesem Sensor verbunden</div>
+                    <div v-if="sensor.linkedPatId==null"><b>Verbindung: </b>Kein Patient mit diesem Sensor verbunden</div>
                   </v-card-text>
                 </v-card>
               </v-expansion-panel-content>

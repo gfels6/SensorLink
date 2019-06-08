@@ -1,5 +1,7 @@
 <template>
   <div>
-    <h1>Add Patient</h1>
+    <v-container fluid>
+      <h2>Patient hinzufügen</h2>
+    </v-container>
   </div>
 </template>

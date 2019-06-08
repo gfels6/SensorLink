@@ -1,5 +1,7 @@
 <template>
   <div>
-    <h1>Add Sensor</h1>
+    <v-container fluid>
+      <h2>Sensor hinzufügen</h2>
+    </v-container>
   </div>
 </template>

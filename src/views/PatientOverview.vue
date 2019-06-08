@@ -47,7 +47,7 @@ export default {
     selectPatient(patient) {
       this.$store.commit("set_patient", patient)
       //console.log(patient);
-      this.$router.push('/patientView')
+      this.$router.push('/patientStatistics')
     },
 
     addPatient() {
