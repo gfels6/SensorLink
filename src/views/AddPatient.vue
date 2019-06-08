@@ -129,7 +129,7 @@ export default {
         "patId": this.patId,
         "firstname": this.firstname,
         "lastname": this.lastname,
-        "birthdate": this.birthdate
+        "birthdate": this.date
       },
       headers: { "Content-Type": "application/json", "Authorization": this.$store.state.token},
       })
