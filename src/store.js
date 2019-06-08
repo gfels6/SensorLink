@@ -14,6 +14,62 @@ export default new Vuex.Store({
     patientList: [],
     sensorList: [],
     selectedPatient: '',
+    readingHR: {
+      "measurementString": "Puls",
+      "measurementCode": [
+        {
+          "system": "loinc",
+          "code": "8867-3",
+          "display": "Heartrate"
+        },
+        {
+          "system": "SNOMED CT",
+          "code": "364075005",
+          "display": "heart rate"
+        }
+      ],
+      "Unit": "/min"
+    },
+    readingSPO2:  {
+      "measurementString": "Sauerstoffsättigung",
+      "measurementCode": [
+        {
+          "system": "loinc",
+          "code": "2708-6",
+          "display": "Oxygen saturation"
+        },
+        {
+          "system": "SNOMED CT",
+          "code": "442476006",
+          "display": "Arterial oxygen saturation"
+        }
+      ],
+      "Unit": "%"
+    },
+    readingRespiration: {
+      "sensorType": "everion",
+      "measurementString": "Atemfrequenz",
+      "measurementCode": [
+        {
+          "system": "loinc",
+          "code": "9279-1",
+          "display": "Respiratory rate"
+        }
+      ],
+      "Unit": "/min"
+    },
+    readingHRV: {
+      "sensorType": "everion",
+      "measurementString": "Herzfrequenzvariabilität",
+      "measurementCode": [
+        {
+          "system": "loinc",
+          "code": "80404-7",
+          "display": "R-R interval.standard deviation (Heart rate variability)"
+        }
+      ],
+      "Unit": "ms"
+    },
 
   },
   mutations: {
