@@ -117,32 +117,41 @@
           <v-card tile flat>
             <v-card-text>
               <h3> Auswahl </h3>
+              <v-form
+                ref="form"
+                v-model="valid"
+                lazy-validation
+              >
               Von:
               <v-text-field
                 label="dd.mm.yyyy hh:mm"
-                solo>
+                v-model="selectedDate"
+                :rules="[v => !!v || 'Zeitpunkt ist erforderlich!']"
+                required
+                >
               </v-text-field>
               <v-select
                 :items="hours"
+                v-model="selectedHours"
                 label="Zeitdauer in h"
-                solo>
+                required
+                :rules="[v => !!v || 'Zeitdauer ist erforderlich!']"
+                >
               </v-select>
-              <v-checkbox
-                v-model="showImage"
-                :label="`Bild anzeigen:`">
-              </v-checkbox>
-              <v-checkbox
-                v-model="showStats"
-                :label="`Bewegung anzeigen`">
-              </v-checkbox>
-              <v-checkbox
-                v-model="showPulse"
-                :label="`Puls anzeigen`">
-              </v-checkbox>
-              <v-checkbox
-                v-model="showSO2"
-                :label="`Sauerstoffsättigung anzeigen`">
-              </v-checkbox>
+              <v-btn
+                :disabled="!valid"
+                color="success"
+                @click="validate"
+              >
+                Erstellen
+              </v-btn>
+              </v-form>
+              <v-layout row wrap>
+                <v-switch v-model="showImage" :label='`Bild anzeigen`'></v-switch>
+                <v-switch class="noMargin" v-model="showStats" :label="`Bewegung anzeigen`"></v-switch>
+                <v-switch class="noMargin" v-model="showPulse" :label="`Puls anzeigen`"></v-switch>
+                <v-switch class="noMargin" v-model="showSO2" :label="`Sauerstoffsättigung anzeigen`"></v-switch>
+              </v-layout>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -162,7 +171,6 @@ const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
 export default {
   data(){
     return {
-      patient: '',
       image: '',
       numberOfBedExits: '',
       numberOfConfirmedBedExitWarnings: '',
@@ -176,18 +184,23 @@ export default {
       heartbeats: [80,80],
       so2: [99,99],
       checking: false,
-      showImage: true,
-      showStats: true,
+      showImage: false,
+      showStats: false,
       showPulse: true,
       showSO2: false,
       fullHR: [],
       fullSO2: [],
       fullRR: [],
       fullHRV: [],
-      hours: [4,6,8,10,12,16,18,24],
+      hours: [8,10,12,16,18,24],
       eventList: [],
+      startMeasurement: '',
+      endMeasurement: '',
       startTimeHeader: 'x',
       endTimeHeader: 'y',
+      valid: true,
+      selectedDate: '',
+      selectedHours: '',
     }
   },
   components: {
@@ -196,7 +209,8 @@ export default {
 
   computed : {
     ...mapState(['selectedPatient']),
-      avgHeartbeat () {
+
+    avgHeartbeat () {
       const sum = this.heartbeats.reduce((acc, cur) => acc + cur, 0)
       const length = this.heartbeats.length
 
@@ -217,29 +231,48 @@ export default {
 
   methods: {
     initialize() {
-      // Check LastMeasurement if this is empty return because no data is available
-      // If this is not empty show the time from last measurement - 8 hours
-      this.patient = this.$store.state.selectedPatient;
+      this.eventList = [];
 
-      if(this.patient.hasOwnProperty('lastMeasurementEntry') && this.patient.lastMeasurementEntry != '') {
-        this.getMoMoToken()
+      if(this.selectedPatient.hasOwnProperty('lastMeasurementEntry') && this.selectedPatient.lastMeasurementEntry != '') {
+        console.log('has prop');        
+        let calculatingDate = new Date(this.selectedPatient.lastMeasurementEntry);
+        let endDate = new Date(this.selectedPatient.lastMeasurementEntry);
+        let startDate = new Date(calculatingDate.setHours(calculatingDate.getHours() - 8));
+
+        this.selectMeasurements(startDate, endDate, 8)
+      }
+      else {
+        console.log('hasnt prop');
+        this.showPulse = false;
+      }
+
+    },
+
+    selectMeasurements(startDate, endDate, hours) {
+      this.eventList = [];
+      this.setHeaderTime(startDate, endDate);
+
+      this.getMoMoToken()
         .then((response) => {
-          //console.log(response.data.access_token);
-          this.getMoMoPicture(response.data.access_token, 2, '2019-06-01T22:00:00.000Z', 8)
+          this.getMoMoPicture(response.data.access_token, this.selectedPatient.patId, startDate.toISOString(), hours)
           .then((response) => {
-            console.log("showPicture");
+            console.log("got Picture");
+            this.showImage = true;
           })
           .catch((error) => {
             console.log("Error: " + error.statusCode + ": " + error.statusMessage)
+            this.showImage = false;
+
           })
 
-          this.getMoMoStatistics(response.data.access_token, 2, '2019-06-01T22:00:00', '2019-06-02T06:00:00')
+          this.getMoMoStatistics(response.data.access_token, this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
           .then((resp) => {
-            console.log("showStats");
+            console.log("got Stats");
+            this.showStats = true;
           })
           .catch((error) => {
-            console.log(error);
             console.log("Error: " + error.statusCode + ": " + error.statusMessage)
+            this.showStats = false;
           }) 
 
         })
@@ -247,24 +280,34 @@ export default {
           console.log("Error: " + error.statusCode + ": " + error.statusMessage)
         })
 
-        this.getMeasurements(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+        this.getMeasurements(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
         .then((response) => {
           console.log("got Measurements")
         }) 
 
-        this.getEvents(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+        this.getEvents(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
         .then((response) => {
-          console.log("got events")
+          console.log("got Events")
         })
-      }
-      else {
-        console.log('hasnt prop');
-      }
 
-      /*TODO 
-      this.startTimeHeader = "tryHard";
-      this.endTimeHeader = "jap";  */
-     
+    },
+    
+    validate() {
+      if (this.$refs.form.validate()) {
+        let calculatingDate = new Date(this.selectedDate.replace( /(\d{2}).(\d{2}).(\d{4})/, "$2/$1/$3"));
+        let startDate = new Date(this.selectedDate.replace( /(\d{2}).(\d{2}).(\d{4})/, "$2/$1/$3"));
+        let endDate = new Date(calculatingDate.setHours(calculatingDate.getHours() + this.selectedHours));
+
+        this.selectMeasurements(startDate, endDate, this.selectedHours);
+      }
+    },
+
+    setHeaderTime(startTime, endTime) {
+      let start = new Date(startTime);
+      let end = new Date(endTime);
+      let options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'};
+      this.startTimeHeader = start.toLocaleDateString('de-DE', options);
+      this.endTimeHeader = end.toLocaleDateString('de-DE', options);
     },
 
     birthdateFormat(date) {
@@ -287,7 +330,6 @@ export default {
       headers: { "Content-Type": "multipart/form-data",}
       })
       .then((response) => {
-        console.log(response);
         return response;
       })
     },
@@ -304,7 +346,7 @@ export default {
         this.image = "data:image/jpeg;base64," + btoa(binary);
       })
       .catch(err => {
-          
+          console.log(err);
       })
     },
 
@@ -324,7 +366,7 @@ export default {
         this.microActivity = response.data.microActivity;
       })
       .catch(err => {
-          
+          console.log(err);
       })
     },
 
@@ -334,8 +376,6 @@ export default {
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token },
       })
       .then((response) => {
-        console.log(response.data[0]);
-        
         response.data.forEach(element => {
           // 8867-4: HR, 2708-6: SO2, 9279-1:RR, 80404-7:HRV
           if(element.reading.measurementCode[0].code == '8867-4') {
@@ -364,13 +404,9 @@ export default {
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token},
       })
       .then((response) => {
-        console.log(response.data[0]);
-        
         response.data.forEach(element => {
           this.eventList.push(element);
         })
-
-        console.log("done");
       })
       .catch(err => {
           
@@ -406,5 +442,8 @@ export default {
 }
 .patientEvents {
   margin-top: 16px;
+}
+.noMargin {
+  margin-top: 0px;
 }
 </style>
