@@ -11,7 +11,7 @@
                     <h3>Patientendaten</h3>
                     Patienten-ID: {{selectedPatient.patId}} <br>
                     Name: {{selectedPatient.firstname}} {{selectedPatient.lastname}} <br>
-                    Geburtstag: {{dateFormat(selectedPatient.birthdate)}}
+                    Geburtstag: {{birthdateFormat(selectedPatient.birthdate)}}
                   </div>
                   <div class="patientEvents">
                     <h3>Ereignisse</h3>
@@ -36,7 +36,7 @@
         <v-flex d-flex sm8 child-flex>
           <v-card tile flat>
             <v-card-text>
-              <h3> Messdaten </h3>
+              <h3> Messdaten von {{ startTimeHeader }} bis {{ endTimeHeader }}</h3>
               <v-img v-if="showImage" :src="image" />
               <v-card v-if="showStats" class="shadow">
                 <v-card-title class="padd">
@@ -162,7 +162,8 @@ const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
 export default {
   data(){
     return {
-      image: "",
+      patient: '',
+      image: '',
       numberOfBedExits: '',
       numberOfConfirmedBedExitWarnings: '',
       numberOfMovementsPerHour: '',
@@ -185,6 +186,8 @@ export default {
       fullHRV: [],
       hours: [4,6,8,10,12,16,18,24],
       eventList: [],
+      startTimeHeader: 'x',
+      endTimeHeader: 'y',
     }
   },
   components: {
@@ -213,7 +216,58 @@ export default {
   },
 
   methods: {
-    dateFormat(date) {
+    initialize() {
+      // Check LastMeasurement if this is empty return because no data is available
+      // If this is not empty show the time from last measurement - 8 hours
+      this.patient = this.$store.state.selectedPatient;
+
+      if(this.patient.hasOwnProperty('lastMeasurementEntry') && this.patient.lastMeasurementEntry != '') {
+        this.getMoMoToken()
+        .then((response) => {
+          //console.log(response.data.access_token);
+          this.getMoMoPicture(response.data.access_token, 2, '2019-06-01T22:00:00.000Z', 8)
+          .then((response) => {
+            console.log("showPicture");
+          })
+          .catch((error) => {
+            console.log("Error: " + error.statusCode + ": " + error.statusMessage)
+          })
+
+          this.getMoMoStatistics(response.data.access_token, 2, '2019-06-01T22:00:00', '2019-06-02T06:00:00')
+          .then((resp) => {
+            console.log("showStats");
+          })
+          .catch((error) => {
+            console.log(error);
+            console.log("Error: " + error.statusCode + ": " + error.statusMessage)
+          }) 
+
+        })
+        .catch((error) => {
+          console.log("Error: " + error.statusCode + ": " + error.statusMessage)
+        })
+
+        this.getMeasurements(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+        .then((response) => {
+          console.log("got Measurements")
+        }) 
+
+        this.getEvents(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+        .then((response) => {
+          console.log("got events")
+        })
+      }
+      else {
+        console.log('hasnt prop');
+      }
+
+      /*TODO 
+      this.startTimeHeader = "tryHard";
+      this.endTimeHeader = "jap";  */
+     
+    },
+
+    birthdateFormat(date) {
         var event = new Date(date);
         var options = { year: 'numeric', month: 'numeric', day: 'numeric' };
         return event.toLocaleDateString('de-DE', options)
@@ -277,7 +331,7 @@ export default {
     getMeasurements(patient, startTime, endTime) {
       return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
-      headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token},
+      headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token },
       })
       .then((response) => {
         console.log(response.data[0]);
@@ -331,44 +385,10 @@ export default {
   mounted() {
     if(this.$store.state.selectedPatient == '') {
       this.$router.push('/patientOverview')
+      return;
     }
 
-    this.getMoMoToken()
-    .then((response) => {
-      //console.log(response.data.access_token);
-      this.getMoMoPicture(response.data.access_token, 2, '2019-06-01T22:00:00.000Z', 8)
-      .then((response) => {
-        console.log("showPicture");
-      })
-      .catch((error) => {
-        console.log("Error: " + error.statusCode + ": " + error.statusMessage)
-      })
-
-      this.getMoMoStatistics(response.data.access_token, 2, '2019-06-01T22:00:00', '2019-06-02T06:00:00')
-      .then((resp) => {
-        console.log("showStats");
-      })
-      .catch((error) => {
-        console.log(error);
-        console.log("Error: " + error.statusCode + ": " + error.statusMessage)
-      }) 
-
-    })
-    .catch((error) => {
-      console.log("Error: " + error.statusCode + ": " + error.statusMessage)
-    })
-
-    /*
-    this.getMeasurements(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
-    .then((response) => {
-      console.log("got Measurements")
-    }) */
-
-    this.getEvents(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
-    .then((response) => {
-      console.log("got events")
-    })
-
+    this.initialize();
   },
     
 }
