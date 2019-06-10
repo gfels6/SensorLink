@@ -50,6 +50,13 @@
                   </div>
                 </v-card-title>
               </v-card>
+              <v-card v-if="showEvent" class="shadow">
+                <v-card-title class="padd">
+                  <div>
+                    <div><b>Ereignis:</b> {{ eventName }} </div>
+                  </div>
+                </v-card-title>
+              </v-card>
               <v-card class="mx-auto shadow" v-if="showPulse">
                 <v-card-title class="padd">
                   <v-layout
@@ -188,6 +195,7 @@ export default {
       showStats: false,
       showPulse: true,
       showSO2: false,
+      showEvent: false,
       fullHR: [],
       fullSO2: [],
       fullRR: [],
@@ -201,6 +209,9 @@ export default {
       valid: true,
       selectedDate: '',
       selectedHours: '',
+      eventName: '',
+      eventFrom: '',
+      eventTo: '',
     }
   },
   components: {
@@ -239,7 +250,7 @@ export default {
         let endDate = new Date(this.selectedPatient.lastMeasurementEntry);
         let startDate = new Date(calculatingDate.setHours(calculatingDate.getHours() - 8));
 
-        this.selectMeasurements(startDate, endDate, 8)
+        this.selectAllMeasurements(startDate, endDate, 8)
       }
       else {
         console.log('hasnt prop');
@@ -248,7 +259,7 @@ export default {
 
     },
 
-    selectMeasurements(startDate, endDate, hours) {
+    selectAllMeasurements(startDate, endDate, hours) {
       this.eventList = [];
       this.setHeaderTime(startDate, endDate);
 
@@ -280,7 +291,7 @@ export default {
           console.log("Error: " + error.statusCode + ": " + error.statusMessage)
         })
 
-        this.getMeasurements(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
+        this.getVitalMeasurements(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
         .then((response) => {
           console.log("got Measurements")
         }) 
@@ -291,23 +302,27 @@ export default {
         })
 
     },
-    
+
     validate() {
       if (this.$refs.form.validate()) {
         let calculatingDate = new Date(this.selectedDate.replace( /(\d{2}).(\d{2}).(\d{4})/, "$2/$1/$3"));
         let startDate = new Date(this.selectedDate.replace( /(\d{2}).(\d{2}).(\d{4})/, "$2/$1/$3"));
         let endDate = new Date(calculatingDate.setHours(calculatingDate.getHours() + this.selectedHours));
 
-        this.selectMeasurements(startDate, endDate, this.selectedHours);
+        this.selectAllMeasurements(startDate, endDate, this.selectedHours);
       }
     },
 
     setHeaderTime(startTime, endTime) {
-      let start = new Date(startTime);
-      let end = new Date(endTime);
+      this.startTimeHeader = this.transformDate(startTime);
+      this.endTimeHeader = this.transformDate(endTime);
+    },
+
+    transformDate(date) {
+      let toTransform = new Date(date);
       let options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'};
-      this.startTimeHeader = start.toLocaleDateString('de-DE', options);
-      this.endTimeHeader = end.toLocaleDateString('de-DE', options);
+      toTransform = toTransform.toLocaleDateString('de-DE', options);
+      return toTransform;
     },
 
     birthdateFormat(date) {
@@ -370,7 +385,7 @@ export default {
       })
     },
 
-    getMeasurements(patient, startTime, endTime) {
+    getVitalMeasurements(patient, startTime, endTime) {
       return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token },
@@ -414,7 +429,22 @@ export default {
     },
 
     selectEvent(event) {
-      console.log(event);
+      this.eventName = event.eventName;
+      this.eventFrom = this.transformDate(event.from);
+      this.eventTo = this.transformDate(event.to);
+      this.showEvent = true;
+      this.showImage = false;
+      this.showStats = false;
+      this.so2 = [];
+      this.heartbeats = [];
+
+      this.setHeaderTime(event.from, event.to);
+
+      this.getVitalMeasurements(this.selectedPatient.patId, new Date(event.from).toISOString(), new Date(event.to).toISOString())
+        .then((response) => {
+          console.log("got Measurements")
+      }) 
+
     },
   },
 
