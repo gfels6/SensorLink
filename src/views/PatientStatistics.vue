@@ -2,28 +2,34 @@
   <div>
     <v-container fluid grid-list-sm>
       <v-layout row wrap>
-        <v-flex d-flex sm2>
+        <v-flex d-flex sm2 child-flex>
           <v-layout row wrap>
             <v-flex d-flex>
               <v-card tile flat>
                 <v-card-text>
-                  <h3>Patientendaten</h3>
-                  Patienten-ID: {{selectedPatient.patId}} <br>
-                  Name: {{selectedPatient.firstname}} {{selectedPatient.lastname}} <br>
-                  Geburtstag: {{dateFormat(selectedPatient.birthdate)}}
+                  <div class="patientData">
+                    <h3>Patientendaten</h3>
+                    Patienten-ID: {{selectedPatient.patId}} <br>
+                    Name: {{selectedPatient.firstname}} {{selectedPatient.lastname}} <br>
+                    Geburtstag: {{dateFormat(selectedPatient.birthdate)}}
+                  </div>
+                  <div class="patientEvents">
+                    <h3>Ereignisse</h3>
+                    <v-list class="pt-0">
+                      <template v-for="(event, index) in eventList">
+                        <v-list-tile
+                          :key="event.from"
+                          @click="selectEvent(event)"
+                        >
+                          <v-list-tile-content>
+                            <v-list-tile-title>E{{index+1}}: {{event.eventName}}</v-list-tile-title>
+                          </v-list-tile-content>
+                        </v-list-tile>
+                      </template>
+                    </v-list>
+                  </div>
                 </v-card-text>
               </v-card>
-            </v-flex>
-            <v-flex d-flex row wrap>
-              <v-layout row>
-                <v-flex d-flex>
-                  <v-card tile flat >
-                    <v-card-text>
-                      <h3> Ereignisse </h3>
-                    </v-card-text>
-                  </v-card>
-                </v-flex>
-              </v-layout>
             </v-flex>
           </v-layout>
         </v-flex>
@@ -173,7 +179,12 @@ export default {
       showStats: true,
       showPulse: true,
       showSO2: false,
+      fullHR: [],
+      fullSO2: [],
+      fullRR: [],
+      fullHRV: [],
       hours: [4,6,8,10,12,16,18,24],
+      eventList: [],
     }
   },
   components: {
@@ -263,40 +274,59 @@ export default {
       })
     },
 
-    getPulse(patient, startTime, endTime) {
-      return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime + '&code=8867-4', 
+    getMeasurements(patient, startTime, endTime) {
+      return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token},
       })
       .then((response) => {
         console.log(response.data[0]);
+        
         response.data.forEach(element => {
-          //console.log(element.value);
-          this.heartbeats.push(parseInt(element.value));
+          // 8867-4: HR, 2708-6: SO2, 9279-1:RR, 80404-7:HRV
+          if(element.reading.measurementCode[0].code == '8867-4') {
+            this.fullHR.push(element);
+            this.heartbeats.push(parseInt(element.value));
+          } else if(element.reading.measurementCode[0].code == '2708-6') {
+            this.fullSO2.push(element);
+            this.so2.push(parseInt(element.value));
+          } else if(element.reading.measurementCode[0].code == '9279-1') {
+            this.fullRR.push(element)
+          } else if(element.reading.measurementCode[0].code == '80404-7') {
+            this.fullHRV.push(element)
+          }
         })
+
+        console.log("done");
       })
       .catch(err => {
           
       })
     },
 
-    getSO2(patient, startTime, endTime) {
-      return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime + '&code=2708-6', 
+    getEvents(patient, startTime, endTime) {
+      return axios({url: SL_BASE_URL + 'patients/' + patient + '/eventsAt?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token},
       })
       .then((response) => {
         console.log(response.data[0]);
+        
         response.data.forEach(element => {
-          //console.log(element.value);
-          this.so2.push(parseInt(element.value));
+          this.eventList.push(element);
         })
+
+        console.log("done");
       })
       .catch(err => {
           
       })
     },
-},
+
+    selectEvent(event) {
+      console.log(event);
+    },
+  },
 
   mounted() {
     if(this.$store.state.selectedPatient == '') {
@@ -314,7 +344,6 @@ export default {
         console.log("Error: " + error.statusCode + ": " + error.statusMessage)
       })
 
-
       this.getMoMoStatistics(response.data.access_token, 2, '2019-06-01T22:00:00', '2019-06-02T06:00:00')
       .then((resp) => {
         console.log("showStats");
@@ -329,23 +358,20 @@ export default {
       console.log("Error: " + error.statusCode + ": " + error.statusMessage)
     })
 
-    this.getPulse(2,'2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
-    .then((resp) => {
-        console.log("getPulse");
-    })
+    /*
+    this.getMeasurements(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+    .then((response) => {
+      console.log("got Measurements")
+    }) */
 
-    this.getSO2(2,'2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
-    .then((resp) => {
-        console.log("getSO2");
+    this.getEvents(2, '2019-06-01T22:00:00Z', '2019-06-02T06:00:00Z')
+    .then((response) => {
+      console.log("got events")
     })
-
 
   },
-  created() {
-    //this.takePulse(false);
-  }
     
-  }
+}
 </script>
 
 <style>
@@ -357,5 +383,8 @@ export default {
 }
 .max {
   max-height: 30vh;
+}
+.patientEvents {
+  margin-top: 16px;
 }
 </style>
