@@ -3,9 +3,9 @@ import Vuex from 'vuex'
 import './plugins/vuetify'
 import App from './App.vue'
 import router from './router.js'
-import HighchartsVue from 'highcharts-vue'
 import store from './store.js'
 import Axios from 'axios'
+import VueApexCharts from 'vue-apexcharts'
 
 Vue.config.productionTip = false
 
@@ -16,6 +16,6 @@ new Vue({
 }).$mount('#app')
 
 Vue.use(Vuex)
-Vue.use(HighchartsVue)
+Vue.use(VueApexCharts)
 
 Vue.prototype.$http = Axios;

@@ -69,25 +69,15 @@
                     <div>
                       <span
                         class="display-2 font-weight-black"
-                        v-text="avgHeartbeat || '—'"
+                        v-text="`—`"
                       ></span>
-                      <strong v-if="avgHeartbeat">Schläge pro Minute</strong>
+                      <strong>Herzschlag pro Sekunde</strong>
                     </div>
                   </v-layout>
+                  <div ref="chart1" class="chart"></div>
                 </v-card-title>
-                <v-sheet color="transparent">
-                  <v-sparkline
-                    :key="String(avgHeartbeat)"
-                    :smooth="8"
-                    :gradient="['#f72047', '#ffd200', '#1feaea']"
-                    :line-width="1"
-                    :value="heartbeats"
-                    auto-draw
-                    stroke-linecap="round"
-                  ></v-sparkline>
-                </v-sheet>
               </v-card>
-              <v-card class="mx-auto shadow" v-if="showSO2">
+              <v-card class="mx-auto shadow" v-if="showSPO2">
                 <v-card-title class="padd">
                   <v-layout
                     column
@@ -99,23 +89,13 @@
                     <div>
                       <span
                         class="display-2 font-weight-black"
-                        v-text="avgSO2 || '—'"
+                        v-text="`—`"
                       ></span>
-                      <strong v-if="avgSO2">Sauerstoffsättigung in %</strong>
+                      <strong>Sauerstoffsättigung in %</strong>
                     </div>
                   </v-layout>
                 </v-card-title>
-                <v-sheet color="transparent">
-                  <v-sparkline
-                    :key="String(avgSO2)"
-                    :smooth="8"
-                    :gradient="['#f72047', '#ffd200', '#1feaea']"
-                    :line-width="1"
-                    :value="so2"
-                    auto-draw
-                    stroke-linecap="round"
-                  ></v-sparkline>
-                </v-sheet>
+                <div ref="chart2" class="chart"></div>
               </v-card>
             </v-card-text>
           </v-card>
@@ -157,7 +137,7 @@
                 <v-switch v-model="showImage" :label='`Bild anzeigen`'></v-switch>
                 <v-switch class="noMargin" v-model="showStats" :label="`Bewegung anzeigen`"></v-switch>
                 <v-switch class="noMargin" v-model="showPulse" :label="`Puls anzeigen`"></v-switch>
-                <v-switch class="noMargin" v-model="showSO2" :label="`Sauerstoffsättigung anzeigen`"></v-switch>
+                <v-switch class="noMargin" v-model="showSPO2" :label="`Sauerstoffsättigung anzeigen`"></v-switch>
               </v-layout>
             </v-card-text>
           </v-card>
@@ -189,15 +169,15 @@ export default {
       totalTimeInBed: '',
       data: [1,2,3,4,5],
       heartbeats: [80,80],
-      so2: [99,99],
+      spo2: [99,99],
       checking: false,
       showImage: false,
       showStats: false,
       showPulse: true,
-      showSO2: false,
+      showSPO2: true,
       showEvent: false,
       fullHR: [],
-      fullSO2: [],
+      fullSPO2: [],
       fullRR: [],
       fullHRV: [],
       hours: [8,10,12,16,18,24],
@@ -212,6 +192,63 @@ export default {
       eventName: '',
       eventFrom: '',
       eventTo: '',
+      renderedOnce: false,
+      chartHR: '',
+      chartSPO2: '',
+      options1: {
+        chart: {
+          height: 350,
+          type: "area"
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: "smooth"
+        },
+        series: [
+          {
+            name: "Puls",
+            data: []
+          }
+        ],
+        xaxis: {
+          type: "datetime",
+          categories: []
+        },
+        tooltip: {
+          x: {
+            format: "dd/MM/yy HH:mm:ss"
+          }
+        }
+      },
+      options2: {
+        chart: {
+          height: 350,
+          type: "area"
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: "smooth"
+        },
+        series: [
+          {
+            name: "SPO2",
+            data: []
+          }
+        ],
+        xaxis: {
+          type: "datetime",
+          categories: []
+        },
+        tooltip: {
+          x: {
+            format: "dd/MM/yy HH:mm:ss"
+          }
+        }
+      },      
     }
   },
   components: {
@@ -221,6 +258,8 @@ export default {
   computed : {
     ...mapState(['selectedPatient']),
 
+    /*
+    REMODDING THIS
     avgHeartbeat () {
       const sum = this.heartbeats.reduce((acc, cur) => acc + cur, 0)
       const length = this.heartbeats.length
@@ -236,7 +275,7 @@ export default {
       if (!sum && !length) return 0
 
       return Math.ceil(sum / length)
-    },
+    }, */
 
   },
 
@@ -299,7 +338,7 @@ export default {
         this.getEvents(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
         .then((response) => {
           console.log("got Events")
-        })
+        }) 
 
     },
 
@@ -386,26 +425,67 @@ export default {
     },
 
     getVitalMeasurements(patient, startTime, endTime) {
+      this.options1.series[0].data = [];
+      this.options1.xaxis.categories = [];
+      this.options2.series[0].data = [];
+      this.options2.xaxis.categories = [];
+
       return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
       headers: { 'Content-type': 'application/json', "Authorization": this.$store.state.token },
       })
       .then((response) => {
+        let indexHR = 0;
+        let avgHR = 0;
+        let indexSPO2 = 0;
+        let avgSPO2 = 0;
+
         response.data.forEach(element => {
-          // 8867-4: HR, 2708-6: SO2, 9279-1:RR, 80404-7:HRV
+          // 8867-4: HR, 2708-6: SPO2, 9279-1:RR, 80404-7:HRV
           if(element.reading.measurementCode[0].code == '8867-4') {
             this.fullHR.push(element);
-            this.heartbeats.push(parseInt(element.value));
+            indexHR++;
+            avgHR += parseInt(element.value);
+            if (indexHR == 10) {
+              this.options1.series[0].data.push(parseInt(avgHR / 10));
+              this.options1.xaxis.categories.push(element.timestamp);
+              avgHR = 0;
+              indexHR = 0;
+            }
           } else if(element.reading.measurementCode[0].code == '2708-6') {
-            this.fullSO2.push(element);
-            this.so2.push(parseInt(element.value));
+            this.fullSPO2.push(element);
+            indexSPO2++;
+            avgSPO2 += parseInt(element.value);
+            if (indexSPO2 == 10) {
+              this.options2.series[0].data.push(parseInt(avgSPO2 / 10));
+              this.options2.xaxis.categories.push(element.timestamp);
+              avgSPO2 = 0;
+              indexSPO2 = 0;
+            }
           } else if(element.reading.measurementCode[0].code == '9279-1') {
             this.fullRR.push(element)
           } else if(element.reading.measurementCode[0].code == '80404-7') {
             this.fullHRV.push(element)
           }
         })
+        
+        if(!this.renderedOnce) {
+          if (this.$refs.chart1 ) {
+            // HTML element exists
+            this.chartHR = new ApexCharts(this.$refs.chart1, this.options1);
+            this.chartHR.render();
+          }
 
+          if (this.$refs.chart2) {
+            // HTML element exists
+            this.chartSPO2 = new ApexCharts(this.$refs.chart2, this.options2);
+            this.chartSPO2.render();
+          } 
+          this.renderedOnce = true;
+        } else {
+          this.chartHR.updateOptions(this.options1);
+          this.chartSPO2.updateOptions(this.options2);
+        }
         console.log("done");
       })
       .catch(err => {
@@ -430,12 +510,10 @@ export default {
 
     selectEvent(event) {
       this.eventName = event.eventName;
-      this.eventFrom = this.transformDate(event.from);
-      this.eventTo = this.transformDate(event.to);
       this.showEvent = true;
       this.showImage = false;
       this.showStats = false;
-      this.so2 = [];
+      this.spo2 = [];
       this.heartbeats = [];
 
       this.setHeaderTime(event.from, event.to);
@@ -455,6 +533,8 @@ export default {
     }
 
     this.initialize();
+
+
   },
     
 }
@@ -475,5 +555,8 @@ export default {
 }
 .noMargin {
   margin-top: 0px;
+}
+.chart {
+  width: 100%;
 }
 </style>
