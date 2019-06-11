@@ -37,8 +37,8 @@
           <v-card tile flat>
             <v-card-text>
               <h3> Messdaten von {{ startTimeHeader }} bis {{ endTimeHeader }}</h3>
-              <v-img v-if="showImage" :src="image" />
-              <v-card v-if="showStats" class="shadow">
+              <v-img v-show="showImage" :src="image" />
+              <v-card v-show="showStats" class="shadow">
                 <v-card-title class="padd">
                   <div>
                     <div><b>Bewegung</b></div>
@@ -50,14 +50,14 @@
                   </div>
                 </v-card-title>
               </v-card>
-              <v-card v-if="showEvent" class="shadow">
+              <v-card v-show="showEvent" class="shadow">
                 <v-card-title class="padd">
                   <div>
                     <div><b>Ereignis:</b> {{ eventName }} </div>
                   </div>
                 </v-card-title>
               </v-card>
-              <v-card class="mx-auto shadow" v-if="showPulse">
+              <v-card class="mx-auto shadow" v-show="showPulse">
                 <v-card-title class="padd">
                   <v-layout
                     column
@@ -74,7 +74,7 @@
                   <div ref="chartHR" class="chart"></div>
                 </v-card-title>
               </v-card>
-              <v-card class="mx-auto shadow" v-if="showSPO2">
+              <v-card class="mx-auto shadow" v-show="showSPO2">
                 <v-card-title class="padd">
                   <v-layout
                     column
@@ -91,7 +91,7 @@
                 </v-card-title>
                 <div ref="chartSPO2" class="chart"></div>
               </v-card>
-              <v-card class="mx-auto shadow" v-if="showRR">
+              <v-card class="mx-auto shadow" v-show="showRR">
                 <v-card-title class="padd">
                   <v-layout
                     column
@@ -108,7 +108,7 @@
                 </v-card-title>
                 <div ref="chartRR" class="chart"></div>
               </v-card>
-              <v-card class="mx-auto shadow" v-if="showHRV">
+              <v-card class="mx-auto shadow" v-show="showHRV">
                 <v-card-title class="padd">
                   <v-layout
                     column
@@ -696,5 +696,8 @@ export default {
 }
 .chart {
   width: 100%;
+}
+.v-list__tile {
+  padding-left: 0px;
 }
 </style>
