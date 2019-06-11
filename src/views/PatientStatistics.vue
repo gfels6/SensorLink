@@ -20,6 +20,7 @@
                         <v-list-tile
                           :key="event.from"
                           @click="selectEvent(event)"
+                          class="noPadd"
                         >
                           <v-list-tile-content>
                             <v-list-tile-title>E{{index+1}}: {{event.eventName}}</v-list-tile-title>
@@ -710,7 +711,7 @@ export default {
 .chart {
   width: 100%;
 }
-.v-list__tile {
+.noPadd a {
   padding-left: 0px;
 }
 </style>
