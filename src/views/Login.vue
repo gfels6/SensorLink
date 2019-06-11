@@ -36,6 +36,8 @@
       }
     },
     methods: {
+      // the login request is handled by the store ($store.dispatch)
+      // if the login is successfull there is route to patOverview
       login: function () {
         let email = this.email;
         let password = this.password;

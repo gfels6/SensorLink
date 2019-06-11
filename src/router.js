@@ -6,7 +6,6 @@ import AddSensor from './views/AddSensor.vue'
 import Login from './views/Login.vue'
 import PatientStatistics from './views/PatientStatistics.vue'
 import PatientOverview from './views/PatientOverview.vue'
-import PatientView from './views/PatientView.vue'
 import SensorOverview from './views/SensorOverview.vue'
 
 Vue.use(VueRouter)
@@ -52,14 +51,6 @@ let router = new VueRouter({
       }
     },
     {
-      path: '/patientView',
-      name: 'patientview',
-      component: PatientView,
-      meta: { 
-        requiresAuth: true
-      }
-    },
-    {
       path: '/sensorOverview',
       name: 'sensoroverview',
       component: SensorOverview,
@@ -70,6 +61,8 @@ let router = new VueRouter({
   ]
 })
 
+/* before every routing, there is a check if the user is logged in
+** if not then there is a routing to the login page */
 router.beforeEach((to, from, next) => {
   if(to.matched.some(record => record.meta.requiresAuth)) {
     if (store.getters.isLoggedIn) {

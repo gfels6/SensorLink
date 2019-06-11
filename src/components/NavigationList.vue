@@ -34,15 +34,18 @@
 <script>
   export default {
     methods:{
+        // the logout is executed in the store ($store.dispatch)
         logout: function () {
             this.$store.dispatch('logout')
             .then(() => {
                 this.$router.push('/')
             })
         },
+        // menu routing to the patient overview
         goToPatOverview(){
             this.$router.push('/patientOverview')
         },
+        // menu routing to the sensor overview
         goToSensorOverview(){
             this.$router.push('/sensorOverview')
         },
