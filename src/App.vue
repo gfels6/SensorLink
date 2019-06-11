@@ -1,6 +1,6 @@
 <template>
   <v-app>
-
+    <!-- navigation drawer in the left side with menu -->
     <v-navigation-drawer
           v-model="drawer"
           clipped
@@ -11,7 +11,7 @@
     >
       <NavigationList></NavigationList>
     </v-navigation-drawer>
-
+    <!-- toolbar with the title and the hamburger icon for the drawer -->
     <v-toolbar color="light-blue lighten-2" fixed app clipped-left>
       <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="isLoggedIn"></v-toolbar-side-icon>
       <v-toolbar-title class="headline">
@@ -19,6 +19,7 @@
       </v-toolbar-title>
     </v-toolbar>
     <v-content>
+      <!-- content from the differents views -->
       <router-view/>
     </v-content>
   </v-app>
@@ -42,12 +43,6 @@ export default {
       isLoggedIn : function(){ return this.$store.getters.isLoggedIn}
     },
   methods: {
-    logout: function () {
-      this.$store.dispatch('logout')
-      .then(() => {
-        this.$router.push('/')
-      })
-    },
     created: function () {
       this.$http.interceptors.response.use(undefined, function (err) {
         return new Promise(function (resolve, reject) {

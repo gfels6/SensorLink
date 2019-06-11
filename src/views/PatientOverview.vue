@@ -32,30 +32,31 @@
 import {mapState} from 'vuex'
 
 export default {
-  data(){
-    return {
-
-    }
-  },
-  components: {
-    
-  },
-
   computed : {
+    // get the state patientList (access with this.patientList)
     ...mapState(['patientList']),
   },
 
   methods: {
+    /**
+    * sets the clicked patient in the store and routing to patientStatistics
+    * @param  {Object} patient clicked patient
+    */
     selectPatient(patient) {
       this.$store.commit("set_patient", patient)
-      //console.log(patient);
       this.$router.push('/patientStatistics')
     },
 
+    // routing to addPatient view
     addPatient() {
       this.$router.push('/addPatient')
     },
 
+    /**
+    * transforms a iso date string in a readable format
+    * @param  {String} date the birthdate in ISO format
+    * @return {String}      birthdate in the format dd.mm.yyyy
+    */
     birthdateFormat(date) {
       var event = new Date(date);
       var options = { year: 'numeric', month: 'numeric', day: 'numeric' };
@@ -65,6 +66,7 @@ export default {
   },
 
   mounted() {
+    // request for all patients in the store
     this.$store.dispatch('getAllPatients')
     .catch((error) => {
       console.log("Error: " + error.statusCode + ": " + error.statusMessage)

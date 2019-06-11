@@ -8,12 +8,19 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    // status of the requests
     status: '',
+    // token from the backend
     token: localStorage.getItem('token') || '',
+    // which user is logged in
     user : {},
+    // patientList which is showed in PatientOverview
     patientList: [],
+    // sensorList which is showed in SensorOverview
     sensorList: [],
+    // which patient is selected in PatientOverview
     selectedPatient: '',
+    // needed readings for the AddSensor request
     readingHR: {
       "measurementString": "Puls",
       "measurementCode": [
@@ -77,7 +84,6 @@ export default new Vuex.Store({
       state.status = 'loading'
     },
     auth_success(state, token, user){
-      console.log("ichwarhier");
       state.status = 'success'
       localStorage.setItem('token', token)
       state.token = token
@@ -92,18 +98,20 @@ export default new Vuex.Store({
       localStorage.removeItem('token')
     },
     set_patientList(state, response){
-      console.log("Setzen der Patienten");
       state.patientList = response.data;
     },
     set_patient(state, pat) {
       state.selectedPatient = pat;
     },
     set_sensorList(state, response){
-      console.log("Setzen der Sensoren");
       state.sensorList = response.data;
     }
   },
   actions: {
+    /**
+    * login request and storing of the token in the state
+    * @param  {Object} user username and password
+    */
     login({commit}, user){
       return new Promise((resolve, reject) => {
         commit('auth_request')
@@ -126,6 +134,7 @@ export default new Vuex.Store({
         commit('logout')
     },
 
+    // select all existing patients and set the patientList state with it
     getAllPatients(context){
       axios({url: SL_BASE_URL + 'patients', 
       method: 'GET',
@@ -139,6 +148,7 @@ export default new Vuex.Store({
       })
     },
 
+    // select all existing sensors and set the sensorList state with it
     getAllSensors(context){
       axios({url: SL_BASE_URL + 'sensors', 
       method: 'GET',
