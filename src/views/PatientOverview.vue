@@ -9,18 +9,20 @@
         >
           Neuen Patienten hinzufügen
         </v-btn>
-      <v-list class="pt-0">
-        <template v-for="patient in patientList">
-          <v-list-tile
-            :key="patient.patId"
-            @click="selectPatient(patient)"
-          >
-            <v-list-tile-content>
-              <v-list-tile-title>{{patient.firstname}} {{patient.lastname}}</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
-        </template>
-        </v-list>
+        <v-card>
+          <v-list>
+          <template v-for="patient in patientList">
+            <v-list-tile
+              :key="patient.patId"
+              @click="selectPatient(patient)"
+            >
+              <v-list-tile-content>
+                <v-list-tile-title>{{patient.firstname}} {{patient.lastname}} - {{birthdateFormat(patient.birthdate)}}</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+          </template>
+          </v-list>
+        </v-card>
     </v-container>
   </div>
 </template>
@@ -52,7 +54,13 @@ export default {
 
     addPatient() {
       this.$router.push('/addPatient')
-    }
+    },
+
+    birthdateFormat(date) {
+      var event = new Date(date);
+      var options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+      return event.toLocaleDateString('de-DE', options)
+    },
 
   },
 
