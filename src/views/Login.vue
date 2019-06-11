@@ -6,18 +6,18 @@
           <v-flex xs12 sm8 md4>
             <v-card class="elevation-12">
               <v-toolbar dark color="primary">
-                <v-toolbar-title>Login form</v-toolbar-title>
+                <v-toolbar-title>Sensorlink Login</v-toolbar-title>
                 <v-spacer></v-spacer>
               </v-toolbar>
               <v-card-text>
                 <v-form>
-                  <v-text-field v-model="email" prepend-icon="person" name="login" label="Login" type="text"></v-text-field>
-                  <v-text-field v-model="password" id="password" prepend-icon="lock" name="password" label="Password" type="password"></v-text-field>
+                  <v-text-field v-model="email" prepend-icon="person" name="login" label="Benutzername" type="text"></v-text-field>
+                  <v-text-field v-model="password" id="password" prepend-icon="lock" name="password" label="Passwort" type="password"></v-text-field>
                 </v-form>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" @click="login()">Login</v-btn>
+                <v-btn color="primary" @click="login()">Einloggen</v-btn>
               </v-card-actions>
             </v-card>
           </v-flex>
