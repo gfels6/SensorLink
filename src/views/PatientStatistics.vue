@@ -38,6 +38,7 @@
           <v-card tile flat>
             <v-card-text>
               <h3> Messdaten von {{ startTimeHeader }} bis {{ endTimeHeader }}</h3>
+              <v-progress-linear v-if="showProgress" :indeterminate="true"></v-progress-linear>
               <v-img v-show="showImage" :src="image" />
               <v-card v-show="showStats" class="shadow">
                 <v-card-title class="padd">
@@ -238,6 +239,7 @@ export default {
       showRR: true,
       showHRV: false,
       showEvent: false,
+      showProgress: false,
       fullHR: [],
       fullSPO2: [],
       fullRR: [],
@@ -443,6 +445,7 @@ export default {
     },
 
     selectAllMeasurements(startDate, endDate, hours) {
+      this.showProgress = true;
       this.eventList = [];
       this.setHeaderTime(startDate, endDate);
 
@@ -644,6 +647,7 @@ export default {
           this.chartRR.updateOptions(this.optionsRR);
           this.chartHRV.updateOptions(this.optionsHRV);
         }
+        this.showProgress = false;
         console.log("done");
       })
       .catch(err => {
