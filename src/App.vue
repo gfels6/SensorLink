@@ -1,12 +1,14 @@
 <template>
   <v-app>
 
-<v-navigation-drawer
-      v-model="drawer"
-      clipped
-      fixed
-      app
-      v-if="isLoggedIn">
+    <v-navigation-drawer
+          v-model="drawer"
+          clipped
+          fixed
+          app
+          v-if="isLoggedIn"
+          v-bind:width="260"
+    >
       <NavigationList></NavigationList>
     </v-navigation-drawer>
 

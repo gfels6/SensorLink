@@ -506,7 +506,7 @@ export default {
     },
 
     getMoMoPicture(token, patient, startTime, hours) {
-      return axios({url: MOMO_BASE_URL + 'Patients/' + patient + '/MobilityAnalysisGraph.png?isPatientNumber=true&startTime=' + startTime + '&hours=' + hours + '&width=800&culture=de-DE&timeOffset=2', 
+      return axios({url: MOMO_BASE_URL + 'Patients/' + patient + '/MobilityAnalysisGraph.png?isPatientNumber=true&startTime=' + startTime + '&hours=' + hours + '&width=750&culture=de-DE&timeOffset=2', 
       method: 'GET',
       responseType: 'arraybuffer',
       headers: { 'Content-type': 'image/png', "Authorization": "Bearer " + token},

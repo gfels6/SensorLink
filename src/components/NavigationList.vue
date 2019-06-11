@@ -6,7 +6,7 @@
             <v-icon>group</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
-            <v-list-tile-title>Patientenübersicht</v-list-tile-title>
+            <v-list-tile-title class="fSize">Patientenübersicht</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
 
@@ -15,7 +15,7 @@
             <v-icon>settings_remote</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
-            <v-list-tile-title>Sensorübersicht</v-list-tile-title>
+            <v-list-tile-title class="fSize">Sensorübersicht</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
 
@@ -24,7 +24,7 @@
             <v-icon>settings</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
-            <v-list-tile-title>Logout</v-list-tile-title>
+            <v-list-tile-title class="fSize">Logout</v-list-tile-title>
           </v-list-tile-content>
           </v-list-tile>
       </v-list>
@@ -49,3 +49,9 @@
     }
   }
 </script>
+
+<style>
+.fSize {
+  font-size: 16px;
+}
+</style>
