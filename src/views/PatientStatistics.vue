@@ -174,6 +174,35 @@
         </v-flex>
       </v-layout>
     </v-container>
+    <v-snackbar
+      v-model="snackbar1"
+      color="error"
+      multi-line="multi-line"
+    >
+      {{ textError }}
+      <v-btn
+        dark
+        flat
+        @click="snackbar1 = false"
+      >
+        Schliessen
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar
+      v-model="snackbar2"
+      color="info"
+      multi-line="multi-line"
+      :timeout="timeout"
+    >
+      {{ textErrorMoMo }}
+      <v-btn
+        dark
+        flat
+        @click="snackbar2 = false"
+      >
+        Schliessen
+      </v-btn>
+    </v-snackbar>
   </div>
 </template>
 
@@ -204,9 +233,9 @@ export default {
       showImage: false,
       showStats: false,
       showPulse: true,
-      showSPO2: true,
+      showSPO2: false,
       showRR: true,
-      showHRV: true,
+      showHRV: false,
       showEvent: false,
       fullHR: [],
       fullSPO2: [],
@@ -229,6 +258,11 @@ export default {
       chartSPO2: '',
       chartRR: '',
       chartHRV: '',
+      snackbar1: false,
+      snackbar2: false,
+      textError: "Es sind keine Messdaten für diesen Patient erfasst!",
+      textErrorMoMo: "Es sind keine Messdaten vom Mobility-Monitor verfügbar.",
+      timeout: 4000,
       optionsHR: {
         chart: {
           height: 350,
@@ -397,8 +431,12 @@ export default {
         this.selectAllMeasurements(startDate, endDate, 8)
       }
       else {
+        this.snackbar1 = true;
         console.log('hasnt prop');
         this.showPulse = false;
+        this.showSPO2 = false;
+        this.showRR = false;
+        this.showHRV = false;
       }
 
     },
@@ -410,41 +448,14 @@ export default {
       this.getMoMoToken()
         .then((response) => {
           this.getMoMoPicture(response.data.access_token, this.selectedPatient.patId, startDate.toISOString(), hours)
-          .then((response) => {
-            console.log("got Picture");
-            this.showImage = true;
-          })
-          .catch((error) => {
-            console.log("Error: " + error.statusCode + ": " + error.statusMessage)
-            this.showImage = false;
-
-          })
-
           this.getMoMoStatistics(response.data.access_token, this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
-          .then((resp) => {
-            console.log("got Stats");
-            this.showStats = true;
-          })
-          .catch((error) => {
-            console.log("Error: " + error.statusCode + ": " + error.statusMessage)
-            this.showStats = false;
-          }) 
-
         })
         .catch((error) => {
           console.log("Error: " + error.statusCode + ": " + error.statusMessage)
         })
 
         this.getVitalMeasurements(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
-        .then((response) => {
-          console.log("got Measurements")
-        }) 
-
         this.getEvents(this.selectedPatient.patId, startDate.toISOString(), endDate.toISOString())
-        .then((response) => {
-          console.log("got Events")
-        }) 
-
     },
 
     validate() {
@@ -503,9 +514,13 @@ export default {
         var bytes = new Uint8Array(response.data);
         var binary = bytes.reduce((data, b) => data += String.fromCharCode(b), '');
         this.image = "data:image/jpeg;base64," + btoa(binary);
+        this.showImage = true;
       })
       .catch(err => {
-          console.log(err);
+        this.snackbar2 = true;
+        this.showImage = false;
+        this.showStats = false;
+        console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     },
 
@@ -523,9 +538,10 @@ export default {
         this.numberOfMovementsPerHour = response.data.numberOfMovementsPerHour;
         this.numberOfImmobilityWarnings = response.data.numberOfImmobilityWarnings;
         this.microActivity = response.data.microActivity;
+        this.showStats = true;
       })
       .catch(err => {
-          console.log(err);
+        console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     },
 
@@ -630,7 +646,7 @@ export default {
         console.log("done");
       })
       .catch(err => {
-          
+          console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     },
 
@@ -645,7 +661,7 @@ export default {
         })
       })
       .catch(err => {
-          
+          console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     },
 
@@ -660,9 +676,6 @@ export default {
       this.setHeaderTime(event.from, event.to);
 
       this.getVitalMeasurements(this.selectedPatient.patId, new Date(event.from).toISOString(), new Date(event.to).toISOString())
-        .then((response) => {
-          console.log("got Measurements")
-      }) 
 
     },
   },
