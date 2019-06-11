@@ -64,44 +64,48 @@
 <script>
 import axios from 'axios'
 
+// constant url of the backend
 const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
 
 export default {
   data(){
     return {
       sensorId: '',
+      // all of the existing manufacturers and their name of the sensor
       manufacturer: ["Biovotion", "Compliant Concept"],
       sensorType: ["everion", "mobilitymonitor"],
+      // toggle boolean for validity of the form
       valid: true,
+      // toggle boolean for the snackbar
       snackbar: false,
+      // text in the snackbar
       textSuccess: "Sensor wurde angelegt. Weiterleitung auf Sensorübersicht.",
+      // how long the snackbar is visible
       timeout: 4000,
+      // two snackbar design options
       mode: 'multi-line',
       color: 'success',
+      // selected sensor type in the dropdown
       selectedSensorType: '',
+      // selected manufacturer in the dropdown
       selectedManufacturer: '',
+      // toggle boolean for the four possible vital data measurements
       heartrate: false,
       spo2: false,
       hrv: false,
       respiration: false,
+      // array which is filled for all checked vital data types
       readings: [],
     }
   },
-  components: {
-    
-  },
-
-  computed : {
-
-  },
-
   methods: {
+    // validates if the form is valid (all rules ok), if it's ok then call addSensor
     validate() {
       if (this.$refs.form.validate()) {
-        if(this.heartrate == true) {
+        if(this.heartrate === true) {
           this.readings.push(this.$store.state.readingHR)
         }
-        if(this.spo2 == true) {
+        if(this.spo2 === true) {
           this.readings.push(this.$store.state.readingSPO2)
         }
         if(this.respiration === true) {
@@ -111,14 +115,15 @@ export default {
           this.readings.push(this.$store.state.readingHRV)
         }
         this.addSensor();
-        //console.log(this.readings);
       }
     },
 
+    // saves the date in the menu
     save (date) {
       this.$refs.menu.save(date)
     },
 
+    // adds a new sensor with four needed sensor parameters from the form
     addSensor(){
       axios({url: SL_BASE_URL + 'sensors', 
       method: 'POST',
@@ -131,6 +136,7 @@ export default {
       headers: { "Content-Type": "application/json", "Authorization": this.$store.state.token},
       })
       .then((response) => {
+        // if it is successfull, it shows a snackbar element and makes a reroute after 3 seconds
         if(response.status == "200") {
           this.snackbar = true;
           setTimeout(() =>{
@@ -139,7 +145,7 @@ export default {
         }
       })
       .catch(err => {
-          
+        console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     }
   },
@@ -149,10 +155,5 @@ export default {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
     }
   },
-
-  mounted() {
-
-  }
-    
-  }
+}
 </script>

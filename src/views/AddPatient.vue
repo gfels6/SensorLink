@@ -85,43 +85,46 @@
 <script>
 import axios from 'axios'
 
+// constant url of the backend
 const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
 
 export default {
   data(){
     return {
+      // four patient parameters (from the form)
       patId: '',
       firstname: '',
       lastname: '',
-      valid: true,
       date: null,
+      // toggle boolean for validity of the form
+      valid: true,
+      // from the datePicker
       menu: false,
+      // toggle boolean for the snackbar
       snackbar: false,
+      // text in the snackbar
       textSuccess: "Patient wurde angelegt. Weiterleitung auf Patientenübersicht.",
+      // how long the snackbar is visible
       timeout: 4000,
+      // two snackbar design options
       mode: 'multi-line',
       color: 'success',
     }
   },
-  components: {
-    
-  },
-
-  computed : {
-
-  },
-
   methods: {
+    // validates if the form is valid (all rules ok), if it's ok then call createPatient
     validate() {
       if (this.$refs.form.validate()) {
         this.createPatient();
       }
     },
 
+    // saves the date in the menu
     save (date) {
       this.$refs.menu.save(date)
     },
 
+    // creates an new patient with four needed patient parameters from the form
     createPatient(){
       axios({url: SL_BASE_URL + 'patients', 
       method: 'POST',
@@ -134,6 +137,7 @@ export default {
       headers: { "Content-Type": "application/json", "Authorization": this.$store.state.token},
       })
       .then((response) => {
+        // if it is successfull, it shows a snackbar element and makes a reroute after 3 seconds
         if(response.status == "200") {
           this.snackbar = true;
           setTimeout(() =>{
@@ -142,7 +146,7 @@ export default {
         }
       })
       .catch(err => {
-          
+        console.log("Error: " + err.statusCode + ": " + err.statusMessage)
       })
     }
   },
@@ -152,10 +156,5 @@ export default {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
     }
   },
-
-  mounted() {
-
-  }
-    
-  }
+}
 </script>
