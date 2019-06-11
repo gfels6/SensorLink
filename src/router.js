@@ -3,7 +3,6 @@ import VueRouter from 'vue-router'
 import store from './store.js'
 import AddPatient from './views/AddPatient.vue'
 import AddSensor from './views/AddSensor.vue'
-import ImportCSV from './views/ImportCSV.vue'
 import Login from './views/Login.vue'
 import PatientStatistics from './views/PatientStatistics.vue'
 import PatientOverview from './views/PatientOverview.vue'
@@ -31,14 +30,6 @@ let router = new VueRouter({
         requiresAuth: true
       }
     },
-    {
-      path: '/importCSV',
-      name: 'importcsv',
-      component: ImportCSV,
-      meta: { 
-        requiresAuth: true
-      }
-    },    
     {
       path: '/',
       name: 'login',

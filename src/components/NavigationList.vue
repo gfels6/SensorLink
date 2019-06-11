@@ -19,15 +19,6 @@
           </v-list-tile-content>
         </v-list-tile>
 
-        <v-list-tile @click="goToImportCSV">
-          <v-list-tile-action>
-            <v-icon>import_export</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>Messwert Import CSV</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-
         <v-list-tile @click="logout()">
           <v-list-tile-action>
             <v-icon>settings</v-icon>
@@ -54,9 +45,6 @@
         },
         goToSensorOverview(){
             this.$router.push('/sensorOverview')
-        },
-        goToImportCSV(){
-            this.$router.push('/importCSV')
         },
     }
   }
