@@ -63,18 +63,15 @@
                     column
                     align-start
                   >
-                    <div class="caption grey--text text-uppercase">
-                      Puls
-                    </div>
                     <div>
                       <span
                         class="display-2 font-weight-black"
-                        v-text="`—`"
+                        v-text="avgHR || '—'"
                       ></span>
-                      <strong>Herzschlag pro Sekunde</strong>
+                      <strong>Durchschnittlicher Puls pro Minute</strong>
                     </div>
                   </v-layout>
-                  <div ref="chart1" class="chart"></div>
+                  <div ref="chartHR" class="chart"></div>
                 </v-card-title>
               </v-card>
               <v-card class="mx-auto shadow" v-if="showSPO2">
@@ -83,19 +80,50 @@
                     column
                     align-start
                   >
-                    <div class="caption grey--text text-uppercase">
-                      Sauerstoffsättigung
-                    </div>
                     <div>
                       <span
                         class="display-2 font-weight-black"
-                        v-text="`—`"
+                        v-text="avgSPO2 || '—'"
                       ></span>
-                      <strong>Sauerstoffsättigung in %</strong>
+                      <strong>Durchschnittliche Sauerstoffsättigung in %</strong>
                     </div>
                   </v-layout>
                 </v-card-title>
-                <div ref="chart2" class="chart"></div>
+                <div ref="chartSPO2" class="chart"></div>
+              </v-card>
+              <v-card class="mx-auto shadow" v-if="showRR">
+                <v-card-title class="padd">
+                  <v-layout
+                    column
+                    align-start
+                  >
+                    <div>
+                      <span
+                        class="display-2 font-weight-black"
+                        v-text="avgRR || '—'"
+                      ></span>
+                      <strong>Durchschnittliche Atemfrequenz pro Minute</strong>
+                    </div>
+                  </v-layout>
+                </v-card-title>
+                <div ref="chartRR" class="chart"></div>
+              </v-card>
+              <v-card class="mx-auto shadow" v-if="showHRV">
+                <v-card-title class="padd">
+                  <v-layout
+                    column
+                    align-start
+                  >
+                    <div>
+                      <span
+                        class="display-2 font-weight-black"
+                        v-text="avgHRV || '—'"
+                      ></span>
+                      <strong>Durchschnittliche Herzfrequenzvariabilität</strong>
+                    </div>
+                  </v-layout>
+                </v-card-title>
+                <div ref="chartHRV" class="chart"></div>
               </v-card>
             </v-card-text>
           </v-card>
@@ -138,6 +166,8 @@
                 <v-switch class="noMargin" v-model="showStats" :label="`Bewegung anzeigen`"></v-switch>
                 <v-switch class="noMargin" v-model="showPulse" :label="`Puls anzeigen`"></v-switch>
                 <v-switch class="noMargin" v-model="showSPO2" :label="`Sauerstoffsättigung anzeigen`"></v-switch>
+                <v-switch class="noMargin" v-model="showRR" :label="`Atemfrequenz anzeigen`"></v-switch>
+                <v-switch class="noMargin" v-model="showHRV" :label="`Herzfrequenzvariabilität anzeigen`"></v-switch>
               </v-layout>
             </v-card-text>
           </v-card>
@@ -175,6 +205,8 @@ export default {
       showStats: false,
       showPulse: true,
       showSPO2: true,
+      showRR: true,
+      showHRV: true,
       showEvent: false,
       fullHR: [],
       fullSPO2: [],
@@ -195,7 +227,9 @@ export default {
       renderedOnce: false,
       chartHR: '',
       chartSPO2: '',
-      options1: {
+      chartRR: '',
+      chartHRV: '',
+      optionsHR: {
         chart: {
           height: 350,
           type: "area"
@@ -222,7 +256,7 @@ export default {
           }
         }
       },
-      options2: {
+      optionsSPO2: {
         chart: {
           height: 350,
           type: "area"
@@ -248,7 +282,61 @@ export default {
             format: "dd/MM/yy HH:mm:ss"
           }
         }
-      },      
+      },
+      optionsRR: {
+        chart: {
+          height: 350,
+          type: "area"
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: "smooth"
+        },
+        series: [
+          {
+            name: "Atemfrequenz",
+            data: []
+          }
+        ],
+        xaxis: {
+          type: "datetime",
+          categories: []
+        },
+        tooltip: {
+          x: {
+            format: "dd/MM/yy HH:mm:ss"
+          }
+        }
+      },
+      optionsHRV: {
+        chart: {
+          height: 350,
+          type: "area"
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: "smooth"
+        },
+        series: [
+          {
+            name: "HRV",
+            data: []
+          }
+        ],
+        xaxis: {
+          type: "datetime",
+          categories: []
+        },
+        tooltip: {
+          x: {
+            format: "dd/MM/yy HH:mm:ss"
+          }
+        }
+      },
     }
   },
   components: {
@@ -258,24 +346,41 @@ export default {
   computed : {
     ...mapState(['selectedPatient']),
 
-    /*
-    REMODDING THIS
-    avgHeartbeat () {
-      const sum = this.heartbeats.reduce((acc, cur) => acc + cur, 0)
-      const length = this.heartbeats.length
+    avgHR () {
+      const sum = this.optionsHR.series[0].data.reduce((acc, cur) => acc + cur, 0)
+      const length = this.optionsHR.series[0].data.length
 
       if (!sum && !length) return 0
 
       return Math.ceil(sum / length)
     },
-    avgSO2 () {
-      const sum = this.so2.reduce((acc, cur) => acc + cur, 0)
-      const length = this.so2.length
+
+    avgSPO2 () {
+      const sum = this.optionsSPO2.series[0].data.reduce((acc, cur) => acc + cur, 0)
+      const length = this.optionsSPO2.series[0].data.length
 
       if (!sum && !length) return 0
 
       return Math.ceil(sum / length)
-    }, */
+    }, 
+
+    avgRR () {
+      const sum = this.optionsRR.series[0].data.reduce((acc, cur) => acc + cur, 0)
+      const length = this.optionsRR.series[0].data.length
+
+      if (!sum && !length) return 0
+
+      return Math.ceil(sum / length)
+    }, 
+
+    avgHRV () {
+      const sum = this.optionsHRV.series[0].data.reduce((acc, cur) => acc + cur, 0)
+      const length = this.optionsHRV.series[0].data.length
+
+      if (!sum && !length) return 0
+
+      return Math.ceil(sum / length)
+    }, 
 
   },
 
@@ -425,10 +530,15 @@ export default {
     },
 
     getVitalMeasurements(patient, startTime, endTime) {
-      this.options1.series[0].data = [];
-      this.options1.xaxis.categories = [];
-      this.options2.series[0].data = [];
-      this.options2.xaxis.categories = [];
+      this.optionsHR.series[0].data = [];
+      this.optionsHR.xaxis.categories = [];
+      this.optionsSPO2.series[0].data = [];
+      this.optionsSPO2.xaxis.categories = [];
+      this.optionsRR.series[0].data = [];
+      this.optionsRR.xaxis.categories = [];
+      this.optionsHRV.series[0].data = [];
+      this.optionsHRV.xaxis.categories = [];
+
 
       return axios({url: SL_BASE_URL + 'patients/' + patient + '/measurements?from=' + startTime + '&to=' + endTime, 
       method: 'GET',
@@ -439,6 +549,10 @@ export default {
         let avgHR = 0;
         let indexSPO2 = 0;
         let avgSPO2 = 0;
+        let indexRR = 0;
+        let avgRR = 0;
+        let indexHRV = 0;
+        let avgHRV = 0;
 
         response.data.forEach(element => {
           // 8867-4: HR, 2708-6: SPO2, 9279-1:RR, 80404-7:HRV
@@ -447,8 +561,8 @@ export default {
             indexHR++;
             avgHR += parseInt(element.value);
             if (indexHR == 10) {
-              this.options1.series[0].data.push(parseInt(avgHR / 10));
-              this.options1.xaxis.categories.push(element.timestamp);
+              this.optionsHR.series[0].data.push(parseInt(avgHR / 10));
+              this.optionsHR.xaxis.categories.push(element.timestamp);
               avgHR = 0;
               indexHR = 0;
             }
@@ -457,34 +571,61 @@ export default {
             indexSPO2++;
             avgSPO2 += parseInt(element.value);
             if (indexSPO2 == 10) {
-              this.options2.series[0].data.push(parseInt(avgSPO2 / 10));
-              this.options2.xaxis.categories.push(element.timestamp);
+              this.optionsSPO2.series[0].data.push(parseInt(avgSPO2 / 10));
+              this.optionsSPO2.xaxis.categories.push(element.timestamp);
               avgSPO2 = 0;
               indexSPO2 = 0;
             }
           } else if(element.reading.measurementCode[0].code == '9279-1') {
             this.fullRR.push(element)
+            indexRR++;
+            avgRR += parseInt(element.value);
+            if (indexRR == 10) {
+              this.optionsRR.series[0].data.push(parseInt(avgRR / 10));
+              this.optionsRR.xaxis.categories.push(element.timestamp);
+              avgRR = 0;
+              indexRR = 0;
+            }
           } else if(element.reading.measurementCode[0].code == '80404-7') {
             this.fullHRV.push(element)
+            indexHRV++;
+            avgHRV += parseInt(element.value);
+            if (indexHRV == 10) {
+              this.optionsHRV.series[0].data.push(parseInt(avgHRV / 10));
+              this.optionsHRV.xaxis.categories.push(element.timestamp);
+              avgHRV = 0;
+              indexHRV = 0;
+            }  
           }
         })
         
         if(!this.renderedOnce) {
-          if (this.$refs.chart1 ) {
+          if (this.$refs.chartHR ) {
             // HTML element exists
-            this.chartHR = new ApexCharts(this.$refs.chart1, this.options1);
+            this.chartHR = new ApexCharts(this.$refs.chartHR, this.optionsHR);
             this.chartHR.render();
           }
-
-          if (this.$refs.chart2) {
+          if (this.$refs.chartSPO2) {
             // HTML element exists
-            this.chartSPO2 = new ApexCharts(this.$refs.chart2, this.options2);
+            this.chartSPO2 = new ApexCharts(this.$refs.chartSPO2, this.optionsSPO2);
             this.chartSPO2.render();
+          } 
+          if (this.$refs.chartRR) {
+            // HTML element exists
+            this.chartRR = new ApexCharts(this.$refs.chartRR, this.optionsRR);
+            this.chartRR.render();
+          } 
+          if (this.$refs.chartHRV) {
+            // HTML element exists
+            this.chartHRV = new ApexCharts(this.$refs.chartHRV, this.optionsHRV);
+            this.chartHRV.render();
           } 
           this.renderedOnce = true;
         } else {
-          this.chartHR.updateOptions(this.options1);
-          this.chartSPO2.updateOptions(this.options2);
+          this.chartHR.updateOptions(this.optionsHR);
+          this.chartSPO2.updateOptions(this.optionsSPO2);
+          this.chartRR.updateOptions(this.optionsRR);
+          this.chartHRV.updateOptions(this.optionsHRV);
         }
         console.log("done");
       })
@@ -531,10 +672,7 @@ export default {
       this.$router.push('/patientOverview')
       return;
     }
-
     this.initialize();
-
-
   },
     
 }
