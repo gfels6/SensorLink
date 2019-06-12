@@ -9,6 +9,7 @@
         >
           Neuen Sensor hinzufügen
         </v-btn>
+          <!-- for every sensor in sensorlist -->
           <v-expansion-panel>
             <v-expansion-panel-content
                 v-for="(sensor,i) in sensorList"
@@ -25,6 +26,7 @@
                     <div v-if="sensor.sensorType=='everion'"><b>Mögliche Messwerte: </b>Puls, Sauerstoffsättigung, Atemfrequenz, Herzvariabilität</div>
                     <div v-if="sensor.linkedPatId!=null"><b>Verbindung: </b>Patient {{sensor.linkedPatId}} mit diesem Sensor verbunden</div>
                     <div v-if="sensor.linkedPatId==null"><b>Verbindung: </b>Kein Patient mit diesem Sensor verbunden</div>
+                    <!-- if no patient is connected with sensor show the link sensor form -->
                     <v-form
                       v-if="sensor.linkedPatId==null"
                       ref="`form + i`"
@@ -58,6 +60,7 @@
                         Verbinden
                       </v-btn>
                     </v-form>
+                    <!-- if a patient is linked with the sensor, show the unlink button -->
                     <v-btn
                       v-if="sensor.linkedPatId!=null"
                       color="success"
@@ -79,37 +82,48 @@
 import {mapState} from 'vuex'
 import axios from 'axios'
 
+// constant url of the backend
 const SL_BASE_URL = 'http://patientpath.i4mi.bfh.ch:3000/api/';
 
 export default {
   data(){
     return {
+      // selected patient in the dropdown
       mdlPatient: '',
-      patList: [],
+      // toggle boolean for validity of the form 
       valid: true,
     }
   },
-  components: {
-    
-  },
-
   computed : {
+    // get the state patientList (access with this.patientList)
     ...mapState(['patientList']),
+    // get the state sensorList (access with this.sensorList)
     ...mapState(['sensorList']),
   },
 
   methods: {
+    // routing to addSensor view
     addSensor() {
       this.$router.push('/addSensor')
     },
 
+    /**
+    * validates if the form is valid (all rules ok), if it's ok then call connectSensor
+    * @param  {Object} sensor the clicked sensor object
+    * @param  {Integer} i index number
+    */
     validate(sensor,i) {
-      //console.log(sensor, i, this.mdlPatient);
       if(this.mdlPatient != '') {
         this.connectSensor(sensor, this.mdlPatient);
       }
     },
 
+    /**
+    * connects / links a patient with a sensor
+    * @param  {Object} sensor the clicked sensor object
+    * @param  {Object} patient patient object from the mdlPatient
+    * @todo   Snackbar implementation
+    */
     connectSensor(sensor, patient){
       axios({url: SL_BASE_URL + 'patients/' + patient.patId + '/linkSensor', 
       method: 'POST',
@@ -119,7 +133,7 @@ export default {
       headers: { "Content-Type": "application/json", "Authorization": this.$store.state.token},
       })
       .then((response) => {
-
+        // reload of the page
         this.$router.go(0);
         /*
         if(response.status == "200") {
@@ -134,6 +148,12 @@ export default {
       }) 
     },
 
+    /**
+    * unlinks a patient with a sensor
+    * @param  {Object} sensor the clicked sensor object
+    * @param  {Object} patId patient id needed for the request
+    * @todo   Snackbar implementation
+    */
     deleteSensor(sensor, patId) {
       axios({url: SL_BASE_URL + 'patients/' + patId + '/unlinkSensor', 
       method: 'POST',
@@ -143,7 +163,7 @@ export default {
       headers: { "Content-Type": "application/json", "Authorization": this.$store.state.token},
       })
       .then((response) => {
-
+        // reload of the page
         this.$router.go(0);
         /*
         if(response.status == "200") {
@@ -161,10 +181,12 @@ export default {
   },
 
   mounted() {
+    // request for all patients (in the store)
     this.$store.dispatch('getAllPatients')
     .catch((error) => {
       console.log("Error: " + error.statusCode + ": " + error.statusMessage)
     })
+    // request for all sensor (in the store)
     this.$store.dispatch('getAllSensors')
     .catch((error) => {
       console.log("Error: " + error.statusCode + ": " + error.statusMessage)
