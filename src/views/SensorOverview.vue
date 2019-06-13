@@ -119,7 +119,7 @@ export default {
     },
 
     /**
-    * transforms a date string in a readable birthdate string
+    * matches a patientId with the patientList names
     * @param  {Number} patId sensor connected patient id
     * @return {String}       formatted firstname and lastname
     */
