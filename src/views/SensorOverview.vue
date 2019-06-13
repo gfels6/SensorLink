@@ -24,7 +24,7 @@
                     <div><b>Hersteller:</b> {{sensor.manufacturer}}</div>
                     <div v-if="sensor.sensorType=='mobilitymonitor'"><b>Mögliche Messwerte:</b> Liegeverhalten, Aufstehverhalten, Bewegung</div>
                     <div v-if="sensor.sensorType=='everion'"><b>Mögliche Messwerte: </b>Puls, Sauerstoffsättigung, Atemfrequenz, Herzvariabilität</div>
-                    <div v-if="sensor.linkedPatId!=null"><b>Verbindung: </b>Patient {{sensor.linkedPatId}} mit diesem Sensor verbunden</div>
+                    <div v-if="sensor.linkedPatId!=null"><b>Verbindung: </b>Patient {{getPatientName(sensor.linkedPatId)}} mit diesem Sensor verbunden</div>
                     <div v-if="sensor.linkedPatId==null"><b>Verbindung: </b>Kein Patient mit diesem Sensor verbunden</div>
                     <!-- if no patient is connected with sensor show the link sensor form -->
                     <v-form
@@ -36,7 +36,7 @@
                       <v-autocomplete
                           v-model="mdlPatient"
                           :items="patientList"
-                          :label="`Wähle einen Patienten zum verbinden aus`"
+                          :label="`Wähle einen Patienten zum Verbinden aus`"
                           :rules="[v => !!v || 'Patient ist erforderlich!']"
                           return-object
                           required
@@ -116,6 +116,21 @@ export default {
       if(this.mdlPatient != '') {
         this.connectSensor(sensor, this.mdlPatient);
       }
+    },
+
+    /**
+    * transforms a date string in a readable birthdate string
+    * @param  {Number} patId sensor connected patient id
+    * @return {String}       formatted firstname and lastname
+    */
+    getPatientName(patId) {
+      let patient = patId;
+      this.patientList.forEach(element => {
+        if(element.patId == patId.toString()) {
+          patient = element.firstname + " " + element.lastname;
+        }
+      });
+      return patient
     },
 
     /**
