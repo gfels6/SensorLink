@@ -604,7 +604,7 @@ export default {
     * @param  {Integer} hours number of hours for the image
     */
     getMoMoPicture(token, patient, startTime, hours) {
-      return axios({url: MOMO_BASE_URL + 'Patients/' + patient + '/MobilityAnalysisGraph.png?isPatientNumber=true&startTime=' + startTime + '&hours=' + hours + '&width=750&culture=de-DE&timeOffset=2', 
+      return axios({url: MOMO_BASE_URL + 'Patients/' + patient + '/MobilityAnalysisGraph.png?isPatientNumber=true&startTime=' + startTime + '&hours=' + hours + '&width=750&includeMicroactivity=true&culture=de-DE&timeOffset=2', 
       method: 'GET',
       // attention: response is a arraybuffer
       responseType: 'arraybuffer',
